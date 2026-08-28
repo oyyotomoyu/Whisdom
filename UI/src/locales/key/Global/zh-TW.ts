@@ -1,0 +1,37 @@
+export default {
+  appName: "Whisdom",
+  actions: {
+    save: "儲存",
+    cancel: "取消",
+    delete: "刪除",
+    edit: "編輯",
+    close: "關閉",
+    retry: "重試",
+    copy: "複製",
+    copied: "已複製",
+    confirm: "確認",
+    back: "返回",
+  },
+  status: {
+    loading: "載入中...",
+    saving: "儲存中...",
+    processing: "處理中...",
+    ready: "已就緒",
+    failed: "失敗",
+  },
+  errors: {
+    generic: "發生錯誤，請再試一次。",
+    network: "無法連線至伺服器，請檢查您的網路。",
+    unauthorized: "您沒有權限執行此操作。",
+    notFound: "找不到請求的資源。",
+  },
+  nav: {
+    chat: "對話",
+    materials: "資料庫",
+    corrections: "答案修正",
+    settings: "設定",
+    admin: "管理",
+    logout: "登出",
+  },
+  language: "語言",
+};

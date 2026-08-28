@@ -142,6 +142,121 @@ Training or fine-tuning should be used only when the company wants to change mod
 
 ---
 
+# Build And Development
+
+Whisdom should use **Makefile** commands as the main build and development interface.
+
+Developers should not need to remember separate frontend and backend commands for normal work. The root `Makefile` should call the correct commands inside the React client and Go server.
+
+## Root Build Structure
+
+Recommended project structure:
+
+```text
+Whisdom/
+├── Makefile
+├── client/
+│   ├── Makefile
+│   ├── package.json
+│   └── src/
+├── server/
+│   ├── Makefile
+│   ├── go.mod
+│   └── main.go
+└── docs/
+```
+
+## Root Makefile Commands
+
+The root `Makefile` should provide the common commands for the whole project:
+
+```text
+make install      # install frontend and backend dependencies
+make dev          # run local frontend and backend development servers
+make build        # build frontend and backend
+make test         # run frontend and backend tests
+make lint         # run lint and format checks
+make clean        # remove build artifacts
+make server       # run only the Go backend
+make client       # run only the React frontend
+make docs         # validate or format documentation when tooling exists
+```
+
+## Client Makefile
+
+The `client/Makefile` should wrap React commands.
+
+Example commands:
+
+```text
+make install
+make dev
+make build
+make test
+make lint
+make clean
+```
+
+The client build output should be static files that the Go server can serve in production.
+
+## Server Makefile
+
+The `server/Makefile` should wrap Go commands.
+
+Example commands:
+
+```text
+make run
+make build
+make test
+make lint
+make clean
+```
+
+The server build should produce a deployable binary.
+
+## Production Build
+
+Production build flow:
+
+```text
+make build
+    ↓
+Build React frontend
+    ↓
+Copy or embed frontend static files for server delivery
+    ↓
+Build Go server binary
+    ↓
+Deploy binary, config, model runtime, and data directories
+```
+
+The production server should serve:
+
+* REST APIs
+* Static React frontend files
+* Uploaded material access only through protected APIs
+
+The production server must not expose model files, training files, logs, or private material directories as public static files.
+
+## Development Run
+
+Development flow:
+
+```text
+make dev
+    ↓
+Start Go backend
+    ↓
+Start React dev server
+    ↓
+React frontend calls backend REST API
+```
+
+The development setup should make local testing easy while preserving the same API paths used in production.
+
+---
+
 # Minimum Server Hardware
 
 The platform should define a lowest practical server PC target that can run the web server, database, file processing, vector search, and local Gemma 4 inference.

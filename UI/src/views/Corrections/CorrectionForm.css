@@ -1,0 +1,57 @@
+.correction-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  background: var(--color-bg);
+}
+
+.correction-form label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: var(--space-3);
+}
+
+.correction-form textarea,
+.correction-form input[type="text"],
+.correction-form input:not([type]) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.usage-options {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.usage-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.correction-submit {
+  margin-top: var(--space-5);
+  align-self: flex-start;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-contrast);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-5);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.correction-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

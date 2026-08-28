@@ -1,0 +1,20 @@
+.corrections-view {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.corrections-header h1 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.3rem;
+}
+
+.corrections-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}

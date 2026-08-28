@@ -1,0 +1,42 @@
+export default {
+  title: "Training Materials",
+  subtitle: "Upload and manage the company knowledge used by the AI.",
+  upload: {
+    title: "Upload material",
+    dragHint: "Drag and drop files here, or click to browse",
+    browse: "Browse files",
+    destinationLabel: "Destination path",
+    destinationPlaceholder: "/rag/internal-docs/",
+    destinationError: {
+      required: "Path is required.",
+      leadingSlash: "Path must start with /.",
+      parentTraversal: "Path cannot contain \"..\".",
+    },
+    submit: "Upload",
+    uploading: "Uploading...",
+  },
+  table: {
+    name: "Name",
+    type: "Type",
+    uploadedAt: "Uploaded",
+    uploadedBy: "Uploaded by",
+    status: "Status",
+    destination: "Destination",
+    rag: "RAG",
+    training: "Training",
+    actions: "Actions",
+    empty: "No materials uploaded yet.",
+  },
+  status: {
+    pending: "Pending",
+    processing: "Processing",
+    ready: "Ready",
+    failed: "Failed",
+  },
+  actions: {
+    reprocess: "Reprocess",
+    delete: "Delete",
+    editDestination: "Edit destination",
+  },
+  deleteConfirm: "Delete this material? This cannot be undone.",
+};

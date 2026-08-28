@@ -1,0 +1,91 @@
+.corrections-empty {
+  color: var(--color-text-muted);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.corrections-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.correction-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-bg);
+}
+
+.correction-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.correction-date {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.correction-delete {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.correction-delete:hover {
+  color: var(--color-danger);
+}
+
+.correction-question {
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.correction-original {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  margin: 0 0 var(--space-1);
+  font-size: 0.88rem;
+}
+
+.correction-corrected {
+  margin: 0 0 var(--space-1);
+  font-size: 0.9rem;
+}
+
+.correction-note {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.status-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: var(--color-warning);
+}
+
+.status-approved {
+  background: #dcfce7;
+  color: var(--color-success);
+}
+
+.status-rejected {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}

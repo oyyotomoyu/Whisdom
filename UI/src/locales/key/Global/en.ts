@@ -1,0 +1,37 @@
+export default {
+  appName: "Whisdom",
+  actions: {
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    edit: "Edit",
+    close: "Close",
+    retry: "Retry",
+    copy: "Copy",
+    copied: "Copied",
+    confirm: "Confirm",
+    back: "Back",
+  },
+  status: {
+    loading: "Loading...",
+    saving: "Saving...",
+    processing: "Processing...",
+    ready: "Ready",
+    failed: "Failed",
+  },
+  errors: {
+    generic: "Something went wrong. Please try again.",
+    network: "Unable to reach the server. Check your connection.",
+    unauthorized: "You are not authorized to perform this action.",
+    notFound: "The requested resource was not found.",
+  },
+  nav: {
+    chat: "Chat",
+    materials: "Materials",
+    corrections: "Corrections",
+    settings: "Settings",
+    admin: "Admin",
+    logout: "Log out",
+  },
+  language: "Language",
+};

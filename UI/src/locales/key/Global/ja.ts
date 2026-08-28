@@ -1,0 +1,37 @@
+export default {
+  appName: "Whisdom",
+  actions: {
+    save: "保存",
+    cancel: "キャンセル",
+    delete: "削除",
+    edit: "編集",
+    close: "閉じる",
+    retry: "再試行",
+    copy: "コピー",
+    copied: "コピーしました",
+    confirm: "確定",
+    back: "戻る",
+  },
+  status: {
+    loading: "読み込み中...",
+    saving: "保存中...",
+    processing: "処理中...",
+    ready: "準備完了",
+    failed: "失敗しました",
+  },
+  errors: {
+    generic: "エラーが発生しました。もう一度お試しください。",
+    network: "サーバーに接続できません。接続を確認してください。",
+    unauthorized: "この操作を行う権限がありません。",
+    notFound: "指定されたリソースが見つかりません。",
+  },
+  nav: {
+    chat: "チャット",
+    materials: "資料",
+    corrections: "修正",
+    settings: "設定",
+    admin: "管理",
+    logout: "ログアウト",
+  },
+  language: "言語",
+};

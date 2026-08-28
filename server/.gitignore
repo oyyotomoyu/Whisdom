@@ -1,0 +1,4 @@
+bin/
+log/
+data/
+*.local
