@@ -4,6 +4,8 @@ Whisdom's server does most of the platform work. The React frontend is only the 
 
 The backend is a **Go web server** that exposes REST APIs to the React frontend.
 
+For a complete quick-reference endpoint list, see [api.md](api.md).
+
 ---
 
 # Core Responsibilities
@@ -202,7 +204,7 @@ Backend validates user and permission
     ↓
 Backend stores user message
     ↓
-Backend retrieves relevant company knowledge
+Backend retrieves relevant library knowledge
     ↓
 Backend sends prompt/context to model
     ↓
@@ -288,17 +290,24 @@ Uploading material should not automatically fine-tune the model. It should norma
 
 ---
 
-# Material And Training Path Config
+# Material Source And Training Destination Config
 
-The server must store a configuration value for the path where model training material is saved or sent.
+The server must store configuration for where model training material is sent
+inside Whisdom and which organization sources are allowed as material origins.
 
-This config controls the destination used by admin material uploads and training jobs.
+The training material path controls the internal destination used by material
+ingestion and training jobs. It is not the only place material may originate
+from.
 
 Example config:
 
 ```json
 {
-  "training_material_path": "/training/company-default/"
+  "training_material_path": "/training/company-default/",
+  "material_source_allowlist": [
+    "https://wiki.company.local/",
+    "https://gitlab.company.local/"
+  ]
 }
 ```
 
@@ -309,14 +318,25 @@ Requirements:
 * The path change must be logged.
 * The server must not allow path traversal.
 * The server should store previous path changes in logs.
+* Source URLs must be validated against configured allowlists.
+* Source connectors must enforce organization access permissions before
+  fetching material.
 
-Validation rules:
+Destination path validation rules:
 
 * Path is required.
 * Path must start with `/`.
 * Path cannot contain `..`.
 * Path cannot contain null bytes.
 * Path should be normalized before use.
+
+Source location validation rules:
+
+* Direct uploads do not require a source location.
+* Local/backend source paths must block traversal and null bytes.
+* URL sources must use an allowed scheme and host.
+* Wiki, GitLab, or repository sources must use configured credentials or
+  connector permissions.
 
 Config APIs:
 
@@ -329,7 +349,11 @@ Example update:
 
 ```json
 {
-  "training_material_path": "/training/customer-support/"
+  "training_material_path": "/training/customer-support/",
+  "material_source_allowlist": [
+    "https://wiki.company.local/",
+    "https://gitlab.company.local/"
+  ]
 }
 ```
 
@@ -337,7 +361,9 @@ Example update:
 
 # Material APIs
 
-Admin users can upload and manage materials.
+Admin users can add and manage materials. A material may come from direct
+upload, backend/local path, internal wiki URL, Git repository URL, or another
+configured organization source.
 
 ```http
 GET    /api/v1/materials
@@ -352,6 +378,8 @@ Upload metadata should include:
 
 * File name
 * File type
+* Source type
+* Source location
 * Uploaded by
 * Upload time
 * Destination path
@@ -359,7 +387,10 @@ Upload metadata should include:
 * RAG status
 * Training status
 
-The server stores original files unless an authorized user deletes them.
+For uploaded files, the server stores original files unless an authorized user
+deletes them. For external sources, the server stores source metadata and either
+fetches content during ingestion or stores a synchronized snapshot, depending on
+the configured connector.
 
 ---
 
@@ -549,8 +580,8 @@ Query parameters:
 | `status` | No | `info`, `warning`, `error`, or comma-separated statuses |
 | `limit` | No | Default 100, max 1000 |
 | `cursor` | No | Pagination cursor |
-| `page` | No | Page number for UI pagination |
-| `page_size` | No | Page size for UI pagination |
+| `page` | No | Page number for client pagination |
+| `page_size` | No | Page size for client pagination |
 | `keyword` | No | Search content, user ID, and IP |
 | `sort` | No | `timestamp` or `status` |
 | `order` | No | `asc` or `desc` |

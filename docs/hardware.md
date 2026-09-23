@@ -4,6 +4,8 @@ Whisdom is designed to run as a self-hosted private AI platform on a company-own
 
 The default local model target is **Gemma 4**.
 
+AI compute is the primary hardware sizing factor. The target model capability, model size, quantization level, context length, response latency, and number of concurrent AI requests should drive the hardware plan before secondary workloads are sized.
+
 ---
 
 # Minimum Practical Server PC
@@ -100,6 +102,8 @@ Whisdom server hardware must support several workloads at the same time:
 
 The AI model is normally the heaviest part of the system. GPU VRAM has the biggest effect on model size, context length, and response speed.
 
+When hardware resources are limited, preserve reliable chat inference first. Training, large embedding batches, OCR, audio transcription, and heavy indexing can be delayed, scheduled off-hours, or moved to another machine.
+
 ---
 
 # CPU
@@ -195,13 +199,14 @@ GPU is used for:
 VRAM affects:
 
 * Model size
+* Model capability
 * Quantization choice
 * Context length
 * Response speed
 * Number of concurrent model requests
 * Whether training can run locally
 
-If the GPU has limited VRAM, use quantized inference and keep training jobs separate from live chat usage.
+If the GPU has limited VRAM, use quantized inference, choose a smaller model variant, reduce context length, limit concurrent model requests, and keep training jobs separate from live chat usage.
 
 ---
 

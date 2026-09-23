@@ -1,7 +1,10 @@
 package apis
 
 import (
+	"errors"
 	"net/http"
+	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -18,6 +21,8 @@ type materialResponse struct {
 	ID                string    `json:"id"`
 	Filename          string    `json:"filename"`
 	Type              string    `json:"type"`
+	SourceType        string    `json:"sourceType"`
+	SourceLocation    string    `json:"sourceLocation"`
 	UploadedAt        time.Time `json:"uploadedAt"`
 	UploadedBy        string    `json:"uploadedBy"`
 	Status            string    `json:"status"`
@@ -31,6 +36,8 @@ func toMaterialResponse(m *system.Material) materialResponse {
 		ID:                m.ID,
 		Filename:          m.Filename,
 		Type:              m.Type,
+		SourceType:        string(m.SourceType),
+		SourceLocation:    m.SourceLocation,
 		UploadedAt:        m.UploadedAt,
 		UploadedBy:        m.UploadedByName,
 		Status:            string(m.Status),
@@ -61,9 +68,14 @@ func (a *App) handleGetMaterial(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleUploadMaterial implements POST /api/v1/materials. The client sends
-// multipart form data with a "file" part and a "destination_path" field
-// (see UI/src/requests/materials/index.ts).
+// either multipart form data with a "file" part or JSON source metadata for
+// already-existing organization knowledge locations.
 func (a *App) handleUploadMaterial(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		a.handleCreateMaterialSource(w, r)
+		return
+	}
+
 	logger := logs.FromContext(r.Context())
 
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
@@ -100,10 +112,125 @@ func (a *App) handleUploadMaterial(w http.ResponseWriter, r *http.Request) {
 		materialType = "file"
 	}
 
-	m := a.Store.CreateMaterial(id, storage.SanitizeFilename(header.Filename), materialType, user.ID, user.Name, destinationPath, storagePath)
+	sourceLocation := r.FormValue("source_location")
+	if strings.TrimSpace(sourceLocation) == "" {
+		sourceLocation = storage.SanitizeFilename(header.Filename)
+	}
+
+	m := a.Store.CreateMaterialFromSource(
+		id,
+		storage.SanitizeFilename(header.Filename),
+		materialType,
+		user.ID,
+		user.Name,
+		destinationPath,
+		string(system.MaterialSourceUpload),
+		sourceLocation,
+		storagePath,
+	)
 
 	logger.Log("info", "uploaded material "+m.ID)
 	writeJSON(w, http.StatusCreated, toMaterialResponse(m))
+}
+
+type createMaterialSourceRequest struct {
+	SourceType      string `json:"source_type"`
+	SourceLocation  string `json:"source_location"`
+	DestinationPath string `json:"destination_path"`
+}
+
+func (a *App) handleCreateMaterialSource(w http.ResponseWriter, r *http.Request) {
+	var req createMaterialSourceRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	destinationPath := req.DestinationPath
+	if err := storage.ValidateDestinationPath(destinationPath); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	destinationPath = storage.NormalizeDestinationPath(destinationPath)
+
+	sourceType := strings.TrimSpace(req.SourceType)
+	sourceLocation := strings.TrimSpace(req.SourceLocation)
+	if err := validateMaterialSource(sourceType, sourceLocation); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	user, _ := currentUser(r.Context())
+	id := system.NewID("mat")
+	filename := materialNameFromSource(sourceType, sourceLocation)
+
+	m := a.Store.CreateMaterialFromSource(
+		id,
+		filename,
+		materialTypeFromSource(sourceType, sourceLocation),
+		user.ID,
+		user.Name,
+		destinationPath,
+		sourceType,
+		sourceLocation,
+		"",
+	)
+
+	logs.FromContext(r.Context()).Log("info", "added material source "+m.ID)
+	writeJSON(w, http.StatusCreated, toMaterialResponse(m))
+}
+
+func validateMaterialSource(sourceType, sourceLocation string) error {
+	if sourceType == "" {
+		return errors.New("source_type is required")
+	}
+	if strings.TrimSpace(sourceLocation) == "" {
+		return errors.New("source_location is required")
+	}
+	if strings.ContainsRune(sourceLocation, 0) || strings.Contains(sourceLocation, "..") {
+		return errors.New("source_location is invalid")
+	}
+
+	switch system.MaterialSourceType(sourceType) {
+	case system.MaterialSourceLocalPath:
+		if !strings.HasPrefix(sourceLocation, "/") {
+			return errors.New("local source path must start with /")
+		}
+	case system.MaterialSourceWikiURL, system.MaterialSourceGitURL, system.MaterialSourceURL:
+		parsed, err := url.ParseRequestURI(sourceLocation)
+		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+			return errors.New("source_location must be a valid URL")
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			return errors.New("source URL must use http or https")
+		}
+	default:
+		return errors.New("source_type is unsupported")
+	}
+	return nil
+}
+
+func materialNameFromSource(sourceType, sourceLocation string) string {
+	if system.MaterialSourceType(sourceType) == system.MaterialSourceLocalPath {
+		return storage.SanitizeFilename(path.Base(sourceLocation))
+	}
+	parsed, err := url.Parse(sourceLocation)
+	if err == nil {
+		if base := path.Base(parsed.Path); base != "." && base != "/" {
+			return storage.SanitizeFilename(base)
+		}
+		if parsed.Host != "" {
+			return storage.SanitizeFilename(parsed.Host)
+		}
+	}
+	return storage.SanitizeFilename(sourceLocation)
+}
+
+func materialTypeFromSource(sourceType, sourceLocation string) string {
+	if ext := strings.TrimPrefix(strings.ToLower(path.Ext(sourceLocation)), "."); ext != "" {
+		return ext
+	}
+	return sourceType
 }
 
 type updateMaterialRequest struct {

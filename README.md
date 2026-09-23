@@ -1,5 +1,8 @@
 # Whisdom
 An open-source, self-hosted AI platform that helps businesses build and train private AI with their own knowledge.
+
+API quick reference: [docs/api.md](docs/api.md)
+
 # Private Enterprise AI Platform
 
 A lightweight, self-hosted AI platform designed for small and medium-sized businesses.
@@ -12,6 +15,7 @@ The primary goals are:
 * **Low deployment cost** — designed for small VMs and affordable hardware.
 * **Easy to deploy** — minimize infrastructure and AI/ML expertise requirements.
 * **Customizable** — organizations can build their own AI knowledge base.
+* **Compute-aware AI** — model capability, context length, latency, and concurrent AI usage guide hardware sizing.
 * **Human-guided improvement** — authorized users can correct AI responses and provide better answers.
 * **Model-independent** — the platform should not be permanently tied to a single LLM provider.
 * **Cross-device** — users access the system through a responsive web interface.
@@ -45,11 +49,11 @@ Regular users interact with the system through a chat interface.
 
 The AI generates responses based on:
 
-* Base language model knowledge
-* Company knowledge
-* Uploaded training materials
-* Retrieved internal information
-* Human corrections and approved examples
+* The approved company library
+* Retrieved internal information from that library
+* Human corrections and approved examples in that library
+
+The **library** is the controlled collection of resources the AI is allowed to use. Every AI answer must be based on the library. If the library does not contain enough relevant information to answer a question, the system should say that the answer is not available from the library instead of answering from the base model's general knowledge.
 
 The interface should support multi-turn conversations and conversation history.
 
@@ -308,7 +312,7 @@ The platform uses a frontend/backend architecture.
                   ▼
         ┌───────────────────┐
         │  React Frontend   │
-        │ Responsive Web UI │
+        │ Responsive Client │
         └─────────┬─────────┘
                   │
                REST API
@@ -368,7 +372,7 @@ The frontend is responsible for:
 * Material management
 * AI correction interface
 * User management
-* Permission-aware UI
+* Permission-aware client
 * Administration interface
 
 ---

@@ -63,5 +63,13 @@ func NewRouter(a *App) http.Handler {
 
 	mux.Handle("GET /api/v1/logs", a.protected(a.handleListLogs, system.PermLogsRead))
 
+	mux.Handle("GET /api/v1/models", a.protected(a.handleListModels, system.PermModelsRead))
+	mux.Handle("GET /api/v1/models/current", a.protected(a.handleCurrentModel, system.PermModelsRead))
+	mux.Handle("POST /api/v1/models/{id}/activate", a.protected(a.handleActivateModel, system.PermModelsManage))
+
+	mux.Handle("POST /api/v1/training/jobs", a.protected(a.handleCreateTrainingJob, system.PermTrainingRun))
+	mux.Handle("GET /api/v1/training/jobs", a.protected(a.handleListTrainingJobs, system.PermTrainingRun))
+	mux.Handle("GET /api/v1/training/jobs/{id}", a.protected(a.handleGetTrainingJob, system.PermTrainingRun))
+
 	return mux
 }

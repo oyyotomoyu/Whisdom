@@ -15,4 +15,8 @@ type App struct {
 	Config *config.Config
 	Model  ai.ModelService
 	RAG    ai.RAGService
+	// Models manages the active model target for the Models API
+	// (GET /api/v1/models, .../current, POST .../{id}/activate). It owns the
+	// same SwitchableModel that Model is set to.
+	Models *ModelManager
 }

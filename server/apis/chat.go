@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/whisdom/server/ai"
@@ -11,9 +12,11 @@ import (
 )
 
 const modelRequestTimeout = 30 * time.Second
+const maxChatMessageLength = 8000
 
 type sendMessageRequest struct {
 	Message string `json:"message"`
+	Stream  bool   `json:"stream,omitempty"`
 }
 
 // chatResponse matches the wire shape UI/src/requests/conversations/index.ts
@@ -34,8 +37,17 @@ func (a *App) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	conversationID := r.PathValue("id")
 
 	var req sendMessageRequest
-	if err := decodeJSON(r, &req); err != nil || req.Message == "" {
+	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "message is required")
+		return
+	}
+	message := strings.TrimSpace(req.Message)
+	if message == "" {
+		writeError(w, http.StatusBadRequest, "message is required")
+		return
+	}
+	if len(message) > maxChatMessageLength {
+		writeError(w, http.StatusBadRequest, "message is too long")
 		return
 	}
 
@@ -50,7 +62,7 @@ func (a *App) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 		history[i] = ai.HistoryTurn{Role: string(m.Role), Content: m.Content}
 	}
 
-	if _, err := a.Store.AppendMessage(user.ID, conversationID, system.MessageRoleUser, req.Message, nil); err != nil {
+	if _, err := a.Store.AppendMessage(user.ID, conversationID, system.MessageRoleUser, message, nil); err != nil {
 		writeSystemError(w, err)
 		return
 	}
@@ -58,13 +70,27 @@ func (a *App) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), modelRequestTimeout)
 	defer cancel()
 
-	chunks, err := a.RAG.Retrieve(ctx, req.Message)
+	// The first message in a conversation gets a naive truncated title
+	// (system.AppendMessage's deriveTitle) immediately; refine it with a
+	// real summary here. Best-effort: a slow or failing model must never
+	// block the chat response.
+	if len(history) == 0 {
+		if title, err := a.Model.Summarize(ctx, message); err != nil {
+			logger.Log("warning", "conversation title summarization failed: "+err.Error())
+		} else if title = strings.TrimSpace(title); title != "" {
+			if _, err := a.Store.SetConversationTitle(user.ID, conversationID, title); err != nil {
+				logger.Log("warning", "failed to set conversation title: "+err.Error())
+			}
+		}
+	}
+
+	chunks, err := a.RAG.Retrieve(ctx, message)
 	if err != nil {
 		logger.Log("warning", "RAG retrieval failed: "+err.Error())
 		chunks = nil
 	}
 
-	result, err := a.Model.Generate(ctx, ai.GenerateRequest{Message: req.Message, Context: chunks, History: history})
+	result, err := a.Model.Generate(ctx, ai.GenerateRequest{Message: message, Context: chunks, History: history})
 	if err != nil {
 		logger.Log("error", "model request failed: "+err.Error())
 		writeError(w, http.StatusBadGateway, "the model could not generate a response")

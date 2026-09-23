@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// ContextChunk is one piece of retrieved company knowledge handed to the
+// ContextChunk is one piece of retrieved library knowledge handed to the
 // model as grounding, and cited back to the user as a source.
 type ContextChunk struct {
 	MaterialID string
@@ -42,6 +42,9 @@ type GenerateResponse struct {
 // a clear error rather than a partial or malformed answer.
 type ModelService interface {
 	Generate(ctx context.Context, req GenerateRequest) (GenerateResponse, error)
+	// Summarize condenses content into a short, single-line summary (used,
+	// e.g., to title a conversation from its first message).
+	Summarize(ctx context.Context, content string) (string, error)
 }
 
 // StubModel is a placeholder ModelService used until a real local model
@@ -61,16 +64,40 @@ func (m *StubModel) Generate(ctx context.Context, req GenerateRequest) (Generate
 
 	if len(req.Context) == 0 {
 		return GenerateResponse{
-			Answer: "No local model is configured yet, so I can't generate a grounded answer. " +
-				"Once a model backend (e.g. Gemma 4) is wired into ai.ModelService, real answers will appear here.",
+			Answer: libraryOnlyRefusal,
 		}, nil
 	}
 
 	var b strings.Builder
-	b.WriteString("Based on the retrieved company knowledge:\n\n")
+	b.WriteString("Based on the retrieved library knowledge:\n\n")
 	for _, c := range req.Context {
 		b.WriteString("- " + c.Name + "\n")
 	}
-	b.WriteString("\n(No local model is configured yet — this is a placeholder answer assembled from retrieved sources only.)")
+	b.WriteString("\n(No local model is configured yet; this placeholder answer is assembled only from retrieved library sources.)")
 	return GenerateResponse{Answer: b.String()}, nil
+}
+
+// summarizeMaxLen bounds a StubModel/OllamaModel summary; conversation
+// titles have no business being long.
+const summarizeMaxLen = 60
+
+// Summarize implements ModelService. Without a local model configured, this
+// is a first-sentence-or-truncation heuristic rather than a real summary.
+func (m *StubModel) Summarize(ctx context.Context, content string) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", fmt.Errorf("summarize request canceled: %w", err)
+	}
+	return truncateSummary(content, summarizeMaxLen), nil
+}
+
+func truncateSummary(content string, maxLen int) string {
+	content = strings.TrimSpace(content)
+	if end := strings.IndexAny(content, ".!?\n"); end > 0 && end < maxLen {
+		return content[:end]
+	}
+	runes := []rune(content)
+	if len(runes) <= maxLen {
+		return content
+	}
+	return string(runes[:maxLen]) + "…"
 }

@@ -13,7 +13,40 @@ The model layer has two separate responsibilities:
 * **Inference** - answer user questions during conversations.
 * **Training or improvement** - use approved material and corrections to improve future behavior.
 
+AI compute capacity and model capability are the most important constraints for this layer. Hardware resources should be selected first around the target model size, context length, response speed, and expected concurrent requests, then around supporting services such as storage, database, and document processing.
+
 Uploading a document should not automatically fine-tune the model. Most company knowledge should first be used through RAG.
+
+---
+
+# Library-Grounded Answers
+
+The **library** is the gathered set of approved resources the AI model is allowed to use when answering users.
+
+Library resources may include:
+
+* Uploaded documents
+* Processed images
+* Audio transcripts
+* Structured records
+* Approved human corrections
+* Approved answer examples
+
+All answers in Whisdom must follow the library. The model must not answer from general base-model knowledge when the question is outside the library.
+
+Answer rule:
+
+```text
+If relevant library context exists:
+    answer according to the library and cite the sources.
+
+If relevant library context does not exist:
+    say the library does not contain enough information to answer.
+```
+
+The base language model may be used for language generation, summarization, and formatting, but the factual content of the answer must come from retrieved library context.
+
+This rule applies to normal chat, corrections, training examples, and future model/runtime integrations.
 
 ---
 
@@ -26,7 +59,7 @@ The backend then:
 * Validates the user
 * Checks permissions
 * Stores the message
-* Finds relevant company knowledge
+* Finds relevant library knowledge
 * Builds the model prompt
 * Sends the request to the model runtime
 * Receives the model answer
@@ -102,6 +135,8 @@ Gemma 4
 
 The exact model size and quantization level should be configurable because hardware capacity will differ between deployments.
 
+Model selection should be based on both capability and available compute. A stronger model may answer better, handle harder reasoning, or support longer context, but it usually requires more VRAM, RAM, and runtime capacity. A smaller or more heavily quantized model may fit lower-cost hardware, but can reduce answer quality, speed under load, or maximum context length.
+
 Config examples:
 
 ```json
@@ -123,7 +158,7 @@ The server must not hard-code model runtime details inside API handlers.
 
 # RAG Layer
 
-RAG is the first choice for company knowledge.
+RAG is the first choice for library knowledge.
 
 Use RAG for:
 
@@ -150,7 +185,9 @@ Gemma 4
 Answer with sources
 ```
 
-The RAG layer should return source references so the UI can show where the answer came from.
+The RAG layer should return source references so the client can show where the answer came from.
+
+If retrieval returns no relevant library chunks, the prompt builder must instruct the model to refuse the question politely instead of answering from general model knowledge.
 
 Source reference data:
 
@@ -238,7 +275,7 @@ Correction creation, update, deletion, and training usage must be logged.
 
 # Material Processing
 
-Training and RAG materials come from the material library.
+Training and RAG materials come from the library.
 
 Processing flow:
 
@@ -276,24 +313,37 @@ Original files should be preserved unless deleted by an authorized admin.
 
 ---
 
-# Training Material Path
+# Training Material Sources And Destination
 
-The backend config stores where model training material is saved or sent.
+The backend config stores where model training material is sent inside Whisdom
+and which organization sources may provide material.
 
 Example:
 
 ```json
 {
-  "training_material_path": "/opt/whisdom/data/training/"
+  "training_material_path": "/opt/whisdom/data/training/",
+  "material_source_allowlist": [
+    "https://wiki.company.local/",
+    "https://gitlab.company.local/"
+  ]
 }
 ```
 
-This path is used by:
+The training material path is used by:
 
-* Material upload workflows
+* Material ingestion workflows
 * Dataset preparation
 * Training job input
 * Admin destination path settings
+
+Material sources may include:
+
+* Direct file upload
+* Backend/local paths
+* Internal wiki pages
+* Git-hosted documentation
+* Other configured organization knowledge sources
 
 Rules:
 
@@ -302,6 +352,8 @@ Rules:
 * Path must be validated before saving.
 * Path traversal must be blocked.
 * The server must normalize paths before use.
+* URL sources must be allowlisted before use.
+* Source connectors must enforce organization access permissions.
 
 ---
 

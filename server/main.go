@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -64,12 +65,20 @@ func run() error {
 		return fmt.Errorf("seed administrator: %w", err)
 	}
 
+	embedder := newEmbedder(cfg)
+	store.SetMaterialProcessor(ai.NewMaterialProcessor(embedder))
+	store.SetTrainingRunner(ai.NewSimulatedTrainingRunner())
+	store.SetLogHook(func(status, content string) { _ = logSvc.Log(status, "", "", content) })
+
+	switchableModel := ai.NewSwitchableModel(newModelService(cfg))
+
 	app := &apis.App{
 		Store:  store,
 		Logs:   logSvc,
 		Config: cfg,
-		Model:  ai.NewStubModel(),
-		RAG:    ai.NewMaterialFilenameRAG(store),
+		Model:  switchableModel,
+		Models: apis.NewModelManager(cfg.Model, switchableModel),
+		RAG:    ai.NewVectorRAG(store, embedder),
 	}
 
 	httpServer := &http.Server{
@@ -165,4 +174,28 @@ func randomPassword() (string, error) {
 		return "", fmt.Errorf("generate password: %w", err)
 	}
 	return base64.RawURLEncoding.EncodeToString(buf), nil
+}
+
+func newModelService(cfg *config.Config) ai.ModelService {
+	switch strings.ToLower(strings.TrimSpace(cfg.Model.Provider)) {
+	case "", "stub":
+		return ai.NewStubModel()
+	case "ollama":
+		return ai.NewOllamaModel(cfg.Model)
+	default:
+		log.Printf("warning: unsupported MODEL_PROVIDER %q; using stub model", cfg.Model.Provider)
+		return ai.NewStubModel()
+	}
+}
+
+func newEmbedder(cfg *config.Config) ai.Embedder {
+	switch strings.ToLower(strings.TrimSpace(cfg.Model.Provider)) {
+	case "", "stub":
+		return ai.NewHashEmbedder()
+	case "ollama":
+		return ai.NewOllamaEmbedder(cfg.Model)
+	default:
+		log.Printf("warning: unsupported MODEL_PROVIDER %q; using hash embedder", cfg.Model.Provider)
+		return ai.NewHashEmbedder()
+	}
 }

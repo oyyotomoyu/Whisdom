@@ -17,9 +17,19 @@ type Config struct {
 	LogDir               string        `json:"log_dir"`
 	DataDir              string        `json:"data_dir"`
 	TrainingMaterialPath string        `json:"training_material_path"`
+	Model                ModelConfig   `json:"model"`
 	AccessTokenTTL       time.Duration `json:"-"`
 	RefreshTokenTTL      time.Duration `json:"-"`
 	JWTSecret            string        `json:"-"`
+}
+
+// ModelConfig controls the local language model runtime used for inference.
+type ModelConfig struct {
+	Provider       string  `json:"provider"`
+	Name           string  `json:"name"`
+	EmbeddingModel string  `json:"embedding_model"`
+	RuntimeURL     string  `json:"runtime_url"`
+	Temperature    float64 `json:"temperature"`
 }
 
 const (
@@ -36,8 +46,15 @@ func Load(path string) (*Config, error) {
 		LogDir:               "log",
 		DataDir:              "data",
 		TrainingMaterialPath: "/training/company-default/",
-		AccessTokenTTL:       defaultAccessTokenTTL,
-		RefreshTokenTTL:      defaultRefreshTokenTTL,
+		Model: ModelConfig{
+			Provider:       "stub",
+			Name:           "stub",
+			EmbeddingModel: "nomic-embed-text",
+			RuntimeURL:     "",
+			Temperature:    0.2,
+		},
+		AccessTokenTTL:  defaultAccessTokenTTL,
+		RefreshTokenTTL: defaultRefreshTokenTTL,
 	}
 
 	if data, err := os.ReadFile(path); err == nil {
@@ -59,6 +76,18 @@ func Load(path string) (*Config, error) {
 	}
 	if v := os.Getenv("DATA_DIR"); v != "" {
 		cfg.DataDir = v
+	}
+	if v := os.Getenv("MODEL_PROVIDER"); v != "" {
+		cfg.Model.Provider = v
+	}
+	if v := os.Getenv("MODEL_NAME"); v != "" {
+		cfg.Model.Name = v
+	}
+	if v := os.Getenv("MODEL_RUNTIME_URL"); v != "" {
+		cfg.Model.RuntimeURL = v
+	}
+	if v := os.Getenv("MODEL_EMBEDDING_NAME"); v != "" {
+		cfg.Model.EmbeddingModel = v
 	}
 
 	cfg.JWTSecret = os.Getenv("WHISDOM_JWT_SECRET")

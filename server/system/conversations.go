@@ -91,6 +91,21 @@ func (s *Store) AppendMessage(userID, conversationID string, role MessageRole, c
 	return &msg, nil
 }
 
+// SetConversationTitle overwrites a conversation's title, scoped to its
+// owner. Used to replace the naive truncated title with a model-summarized
+// one once the first exchange completes.
+func (s *Store) SetConversationTitle(userID, id, title string) (*Conversation, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	conv, ok := s.conversations[id]
+	if !ok || conv.UserID != userID {
+		return nil, ErrNotFound
+	}
+	conv.Title = title
+	return conv, nil
+}
+
 func deriveTitle(content string) string {
 	const maxLen = 60
 	runes := []rune(content)

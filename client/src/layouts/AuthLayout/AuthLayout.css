@@ -1,0 +1,48 @@
+.auth-layout {
+  height: 100%;
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, #ecebff, var(--color-bg-subtle) 46%);
+}
+
+.auth-layout-top {
+  position: absolute;
+  z-index: 2;
+  inset: 20px 24px auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.app-language-selector {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-bg);
+  font-size: 0.8rem;
+}
+
+.auth-layout-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 96px 24px 32px;
+}
+
+@media (max-width: 520px) {
+  .auth-layout {
+    overflow-y: auto;
+  }
+
+  .auth-layout-top {
+    inset: 18px 20px auto 20px;
+  }
+
+  .auth-layout-content {
+    padding: 92px 20px 24px;
+  }
+}

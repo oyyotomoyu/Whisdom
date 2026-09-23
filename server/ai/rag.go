@@ -2,58 +2,82 @@ package ai
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"github.com/whisdom/server/system"
 )
 
-// RAGService retrieves the company knowledge most relevant to a query.
+// RAGService retrieves the library knowledge most relevant to a query.
 type RAGService interface {
 	Retrieve(ctx context.Context, query string) ([]ContextChunk, error)
 }
 
-// MaterialFilenameRAG is a placeholder RAGService: it matches query words
-// against ready materials' filenames. There is no text extraction, chunking,
-// or embedding pipeline yet (see docs/server.md's "Material And Training
-// Path Config" section), so this cannot do real semantic retrieval — it
-// exists so the chat API's source-citation contract can be exercised end to
-// end before the real vector-search RAG backend lands.
-type MaterialFilenameRAG struct {
-	store *system.Store
+// ragMaxResults and ragMinScore bound what VectorRAG hands to the model: at
+// most a handful of chunks, and only ones that actually resemble the query,
+// so unrelated material is never sent as context (docs/server.md's "Avoid
+// sending unrelated material to the model").
+const (
+	ragMaxResults = 4
+	ragMinScore   = 0.05
+)
+
+// VectorRAG retrieves the chunks whose embeddings are most similar to the
+// query's embedding, searching every ready material's chunk store. It
+// replaces the earlier filename-substring placeholder now that materials are
+// actually chunked and embedded (see processor.go).
+type VectorRAG struct {
+	store    *system.Store
+	embedder Embedder
 }
 
-// NewMaterialFilenameRAG returns a RAGService placeholder backed by store.
-func NewMaterialFilenameRAG(store *system.Store) *MaterialFilenameRAG {
-	return &MaterialFilenameRAG{store: store}
+// NewVectorRAG returns a RAGService backed by store's embedded material
+// chunks.
+func NewVectorRAG(store *system.Store, embedder Embedder) *VectorRAG {
+	return &VectorRAG{store: store, embedder: embedder}
+}
+
+type scoredChunk struct {
+	chunk        system.MaterialChunk
+	materialName string
+	score        float64
 }
 
 // Retrieve implements RAGService.
-func (r *MaterialFilenameRAG) Retrieve(ctx context.Context, query string) ([]ContextChunk, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-
-	keywords := strings.Fields(strings.ToLower(query))
-	if len(keywords) == 0 {
+func (r *VectorRAG) Retrieve(ctx context.Context, query string) ([]ContextChunk, error) {
+	query = strings.TrimSpace(query)
+	if query == "" {
 		return nil, nil
 	}
 
-	const maxResults = 3
-	var chunks []ContextChunk
+	vectors, err := r.embedder.Embed(ctx, []string{query})
+	if err != nil {
+		return nil, err
+	}
+	queryVector := vectors[0]
+
+	var candidates []scoredChunk
 	for _, m := range r.store.ListMaterials() {
 		if m.Status != system.MaterialReady || !m.RAGAvailable {
 			continue
 		}
-		name := strings.ToLower(m.Filename)
-		for _, kw := range keywords {
-			if len(kw) >= 3 && strings.Contains(name, kw) {
-				chunks = append(chunks, ContextChunk{MaterialID: m.ID, Name: m.Filename})
-				break
+		for _, chunk := range r.store.MaterialChunks(m.ID) {
+			score := cosineSimilarity(queryVector, chunk.Embedding)
+			if score < ragMinScore {
+				continue
 			}
-		}
-		if len(chunks) >= maxResults {
-			break
+			candidates = append(candidates, scoredChunk{chunk: chunk, materialName: m.Filename, score: score})
 		}
 	}
-	return chunks, nil
+
+	sort.Slice(candidates, func(i, j int) bool { return candidates[i].score > candidates[j].score })
+	if len(candidates) > ragMaxResults {
+		candidates = candidates[:ragMaxResults]
+	}
+
+	out := make([]ContextChunk, len(candidates))
+	for i, c := range candidates {
+		out[i] = ContextChunk{MaterialID: c.chunk.MaterialID, Name: c.materialName, Text: c.chunk.Text}
+	}
+	return out, nil
 }

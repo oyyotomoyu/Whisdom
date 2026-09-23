@@ -13,11 +13,11 @@ The system is designed around four core goals:
 
 # Technology Stack
 
-## UI
+## Client
 
 The frontend is built with **React**.
 
-The UI must support:
+The client must support:
 
 * Mobile browsers
 * Tablet browsers
@@ -47,6 +47,8 @@ The server is responsible for:
 The default local model target is **Gemma 4**.
 
 The model layer should be abstracted so the platform can later support different model backends, model sizes, or inference runtimes without rewriting the whole application.
+
+AI compute and model capability are central architecture concerns. The platform should let deployments choose a model/runtime combination that matches available VRAM, RAM, latency targets, context requirements, and expected concurrent usage.
 
 Possible model responsibilities include:
 
@@ -95,7 +97,9 @@ Permission checks must always happen on the backend. Frontend checks are only fo
 
 ### 素材庫 / 文件媒體
 
-The material library stores company knowledge sources.
+The material library, also called the **library**, stores the approved company knowledge sources the AI is allowed to use.
+
+Every AI answer must be grounded in this library. If the library does not contain relevant information for a user question, the system should say it cannot answer from the library instead of using the model's general knowledge.
 
 Supported material types may include:
 
@@ -123,7 +127,7 @@ Material processing may include:
 
 ### AI / RAG / 訓練 / 推論
 
-The AI layer combines the local model with business knowledge.
+The AI layer combines the local model with business knowledge from the library.
 
 RAG should be used for frequently changing information such as:
 
@@ -292,6 +296,7 @@ The recommended target gives more room for larger documents, more users, faster 
 Actual hardware requirements depend on:
 
 * Gemma 4 model size
+* Target model capability
 * Quantization level
 * Context length
 * Number of concurrent users

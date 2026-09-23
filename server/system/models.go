@@ -1,6 +1,9 @@
 package system
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Role is a named set of permissions.
 type Role struct {
@@ -74,19 +77,32 @@ const (
 	MaterialFailed     MaterialStatus = "failed"
 )
 
-// Material is one uploaded piece of company knowledge.
+// MaterialSourceType identifies how a material entered the library.
+type MaterialSourceType string
+
+const (
+	MaterialSourceUpload    MaterialSourceType = "upload"
+	MaterialSourceLocalPath MaterialSourceType = "local_path"
+	MaterialSourceWikiURL   MaterialSourceType = "wiki_url"
+	MaterialSourceGitURL    MaterialSourceType = "git_url"
+	MaterialSourceURL       MaterialSourceType = "url"
+)
+
+// Material is one piece of company knowledge.
 type Material struct {
-	ID                string         `json:"id"`
-	Filename          string         `json:"filename"`
-	Type              string         `json:"type"`
-	UploadedByID      string         `json:"-"`
-	UploadedByName    string         `json:"uploaded_by"`
-	UploadedAt        time.Time      `json:"uploaded_at"`
-	DestinationPath   string         `json:"destination_path"`
-	Status            MaterialStatus `json:"status"`
-	RAGAvailable      bool           `json:"rag_available"`
-	TrainingAvailable bool           `json:"training_available"`
-	StoragePath       string         `json:"-"`
+	ID                string             `json:"id"`
+	Filename          string             `json:"filename"`
+	Type              string             `json:"type"`
+	SourceType        MaterialSourceType `json:"source_type"`
+	SourceLocation    string             `json:"source_location"`
+	UploadedByID      string             `json:"-"`
+	UploadedByName    string             `json:"uploaded_by"`
+	UploadedAt        time.Time          `json:"uploaded_at"`
+	DestinationPath   string             `json:"destination_path"`
+	Status            MaterialStatus     `json:"status"`
+	RAGAvailable      bool               `json:"rag_available"`
+	TrainingAvailable bool               `json:"training_available"`
+	StoragePath       string             `json:"-"`
 }
 
 // CorrectionUsage is where a correction may be applied.
@@ -120,4 +136,66 @@ type Correction struct {
 	Status            CorrectionStatus `json:"status"`
 	CreatedByID       string           `json:"-"`
 	CreatedAt         time.Time        `json:"created_at"`
+}
+
+// MaterialChunk is one embedded slice of a material's extracted text, used
+// for RAG similarity search.
+type MaterialChunk struct {
+	ID         string
+	MaterialID string
+	Text       string
+	Embedding  []float64
+}
+
+// ProcessedChunk is one chunk produced by a MaterialProcessor, before Store
+// assigns it an ID and a MaterialID.
+type ProcessedChunk struct {
+	Text      string
+	Embedding []float64
+}
+
+// MaterialProcessor turns a stored material's file into embedded chunks.
+// Implementations live in the ai package (extraction, chunking, embedding);
+// system only depends on this interface to avoid an import cycle.
+type MaterialProcessor interface {
+	Process(ctx context.Context, m *Material) ([]ProcessedChunk, error)
+}
+
+// TrainingJobStatus tracks a training/adapter job's lifecycle.
+type TrainingJobStatus string
+
+const (
+	TrainingJobPending   TrainingJobStatus = "pending"
+	TrainingJobRunning   TrainingJobStatus = "running"
+	TrainingJobSucceeded TrainingJobStatus = "succeeded"
+	TrainingJobFailed    TrainingJobStatus = "failed"
+)
+
+// TrainingJob is one request to train or adapt the model from approved
+// corrections and selected materials.
+type TrainingJob struct {
+	ID            string
+	MaterialIDs   []string
+	CorrectionIDs []string
+	Status        TrainingJobStatus
+	Error         string
+	CreatedByID   string
+	CreatedAt     time.Time
+	StartedAt     time.Time
+	CompletedAt   time.Time
+}
+
+// TrainingRunner executes a training job's actual work. Implementations live
+// in the ai package, same rationale as MaterialProcessor.
+type TrainingRunner interface {
+	Run(ctx context.Context, job TrainingJob, materials []*Material, corrections []*Correction) error
+}
+
+// ModelTarget is one selectable model the chat/summarize APIs can run
+// against.
+type ModelTarget struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Provider    string `json:"provider"`
+	Description string `json:"description,omitempty"`
 }
