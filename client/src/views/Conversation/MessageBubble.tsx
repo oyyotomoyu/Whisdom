@@ -48,7 +48,7 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
             <span className="message-sources-label">{t("message.sources")}</span>
             <ul>
               {message.sources.map((source) => (
-                <li key={source.materialId}>{source.name}</li>
+                <li key={source.chunkId ?? source.materialId}>{source.title}</li>
               ))}
             </ul>
           </div>

@@ -56,6 +56,7 @@ func (a *App) handleListLogs(w http.ResponseWriter, r *http.Request) {
 
 	result, err := a.Logs.Query(opts)
 	if err != nil {
+		logs.FromContext(r.Context()).Log("error", "failed to read logs: "+err.Error())
 		writeError(w, http.StatusInternalServerError, "failed to read logs")
 		return
 	}

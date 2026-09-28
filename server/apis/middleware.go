@@ -56,6 +56,12 @@ func (a *App) requireAuth(next http.Handler) http.Handler {
 
 		authUser, err := a.Store.ResolveAuthUser(user)
 		if err != nil {
+			// The log middleware hasn't run yet at this point in the chain
+			// (it needs requireAuth to resolve the user first), so
+			// logs.FromContext would be nil here; write directly through the
+			// service instead, with what we do know: the request's IP and
+			// the user ID from the token (resolution is what just failed).
+			a.Logs.Log(logs.StatusError, logs.ClientIP(r), claims.Subject, "failed to resolve authenticated user: "+err.Error())
 			writeError(w, http.StatusInternalServerError, "failed to resolve user")
 			return
 		}

@@ -12,11 +12,16 @@ import (
 )
 
 // ContextChunk is one piece of retrieved library knowledge handed to the
-// model as grounding, and cited back to the user as a source.
+// model as grounding, and cited back to the user as a source. ChunkID and
+// Score are the docs/model.md-documented citation fields (chunk_id, score);
+// Score is the RAG backend's own relevance measure (e.g. cosine similarity)
+// and has no fixed range guarantee across backends.
 type ContextChunk struct {
 	MaterialID string
+	ChunkID    string
 	Name       string
 	Text       string
+	Score      float64
 }
 
 // HistoryTurn is one prior message in the conversation, oldest first.

@@ -47,6 +47,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := a.issueTokenPair(user.ID)
 	if err != nil {
+		logger.Log("error", "login failed to issue session for "+user.ID+": "+err.Error())
 		writeError(w, http.StatusInternalServerError, "failed to issue session")
 		return
 	}
@@ -54,6 +55,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	authUser, err := a.Store.ResolveAuthUser(user)
 	if err != nil {
+		logger.Log("error", "login failed to resolve user "+user.ID+": "+err.Error())
 		writeError(w, http.StatusInternalServerError, "failed to resolve user")
 		return
 	}
@@ -105,6 +107,7 @@ func (a *App) handleRefresh(w http.ResponseWriter, r *http.Request) {
 
 	access, refresh, err := a.issueTokenPair(user.ID)
 	if err != nil {
+		logger.Log("error", "token refresh failed to issue session for "+user.ID+": "+err.Error())
 		writeError(w, http.StatusInternalServerError, "failed to issue session")
 		return
 	}

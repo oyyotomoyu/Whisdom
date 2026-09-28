@@ -1,30 +1,52 @@
 import type { AuthUser, Permission } from "../../store/types";
 import type { LoginPayload, LoginResponse } from "./index";
 
-const devAccessToken = "dev-access-token";
-const devEmail = "admin@whisdom.local";
-const devPassword = "1234";
+interface DevAccount {
+  accessToken: string;
+  email: string;
+  password: string;
+  user: AuthUser;
+}
 
-const devUser: AuthUser = {
-  id: "dev-admin",
-  name: "Development Admin",
-  email: devEmail,
-  role: "administrator",
-  permissions: [
-    "chat.use",
-    "materials.read",
-    "materials.upload",
-    "materials.delete",
-    "corrections.create",
-    "corrections.read",
-    "corrections.delete",
-    "users.read",
-    "users.manage",
-    "models.read",
-    "models.manage",
-    "system.manage",
-  ] satisfies Permission[],
-};
+const devAccounts: DevAccount[] = [
+  {
+    accessToken: "dev-access-token-admin",
+    email: "admin@whisdom.local",
+    password: "1234",
+    user: {
+      id: "dev-admin",
+      name: "Development Admin",
+      email: "admin@whisdom.local",
+      role: "administrator",
+      permissions: [
+        "chat.use",
+        "materials.read",
+        "materials.upload",
+        "materials.delete",
+        "corrections.create",
+        "corrections.read",
+        "corrections.delete",
+        "users.read",
+        "users.manage",
+        "models.read",
+        "models.manage",
+        "system.manage",
+      ] satisfies Permission[],
+    },
+  },
+  {
+    accessToken: "dev-access-token-user",
+    email: "user@whisdom.local",
+    password: "1234",
+    user: {
+      id: "dev-user",
+      name: "Development User",
+      email: "user@whisdom.local",
+      role: "user",
+      permissions: ["chat.use"] satisfies Permission[],
+    },
+  },
+];
 
 export function isDevMode() {
   if (process.env.NODE_ENV !== "production") {
@@ -35,18 +57,23 @@ export function isDevMode() {
 }
 
 export function getDevCredentials() {
+  const [admin] = devAccounts;
   return {
-    username: devEmail,
-    password: devPassword,
+    username: admin.email,
+    password: admin.password,
   };
 }
 
 export function getDevLoginResponse(payload: LoginPayload): LoginResponse | null {
   if (process.env.NODE_ENV !== "production") {
-    if (payload.username === devEmail && payload.password === devPassword) {
+    const account = devAccounts.find(
+      (candidate) => candidate.email === payload.username && candidate.password === payload.password
+    );
+
+    if (account) {
       return {
-        access_token: devAccessToken,
-        user: devUser,
+        access_token: account.accessToken,
+        user: account.user,
       };
     }
   }
@@ -56,8 +83,11 @@ export function getDevLoginResponse(payload: LoginPayload): LoginResponse | null
 
 export function getDevCurrentUser(): AuthUser | null {
   if (process.env.NODE_ENV !== "production") {
-    if (localStorage.getItem("whisdom_auth")?.includes(devAccessToken)) {
-      return devUser;
+    const stored = localStorage.getItem("whisdom_auth");
+    const account = stored ? devAccounts.find((candidate) => stored.includes(candidate.accessToken)) : undefined;
+
+    if (account) {
+      return account.user;
     }
   }
 

@@ -6,7 +6,9 @@ export interface ConversationSummary {
 
 export interface MessageSource {
   materialId: string;
-  name: string;
+  title: string;
+  chunkId?: string;
+  score?: number;
 }
 
 export type MessageRole = "user" | "assistant";

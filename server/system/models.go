@@ -41,10 +41,13 @@ const (
 	MessageRoleAssistant MessageRole = "assistant"
 )
 
-// MessageSource cites a material a RAG answer drew from.
+// MessageSource cites a material (and, when the RAG backend supports it, the
+// specific chunk and relevance score) a RAG answer drew from.
 type MessageSource struct {
-	MaterialID string `json:"material_id"`
-	Name       string `json:"name"`
+	MaterialID string  `json:"material_id"`
+	Title      string  `json:"title"`
+	ChunkID    string  `json:"chunk_id,omitempty"`
+	Score      float64 `json:"score,omitempty"`
 }
 
 // Message is one turn in a conversation.
@@ -134,7 +137,7 @@ type Correction struct {
 	RelatedMaterialID string           `json:"related_material_id,omitempty"`
 	Usage             CorrectionUsage  `json:"usage"`
 	Status            CorrectionStatus `json:"status"`
-	CreatedByID       string           `json:"-"`
+	CreatedByID       string           `json:"created_by"`
 	CreatedAt         time.Time        `json:"created_at"`
 }
 

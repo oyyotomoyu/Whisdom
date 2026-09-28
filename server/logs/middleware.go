@@ -47,7 +47,7 @@ func Middleware(svc *Service, userIDFn UserIDFunc) func(http.Handler) http.Handl
 			if userIDFn != nil {
 				userID = userIDFn(r)
 			}
-			rl := &RequestLogger{svc: svc, ip: clientIP(r), userID: userID}
+			rl := &RequestLogger{svc: svc, ip: ClientIP(r), userID: userID}
 			next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), contextKey{}, rl)))
 		})
 	}
@@ -60,7 +60,9 @@ func FromContext(ctx context.Context) *RequestLogger {
 	return rl
 }
 
-func clientIP(r *http.Request) string {
+// ClientIP extracts the request's client IP, preferring a forwarded-for
+// header (set by a reverse proxy) over the raw connection address.
+func ClientIP(r *http.Request) string {
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
 		for _, part := range strings.Split(fwd, ",") {
 			if part = strings.TrimSpace(part); part != "" {

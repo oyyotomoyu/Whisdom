@@ -10,6 +10,7 @@ export interface Correction {
   relatedMaterialId?: string;
   usage: CorrectionUsage;
   status: CorrectionStatus;
+  createdBy: string;
   createdAt: string;
 }
 

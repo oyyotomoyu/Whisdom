@@ -17,6 +17,7 @@ type correctionResponse struct {
 	RelatedMaterialID string    `json:"relatedMaterialId,omitempty"`
 	Usage             string    `json:"usage"`
 	Status            string    `json:"status"`
+	CreatedBy         string    `json:"createdBy"`
 	CreatedAt         time.Time `json:"createdAt"`
 }
 
@@ -30,6 +31,7 @@ func toCorrectionResponse(c *system.Correction) correctionResponse {
 		RelatedMaterialID: c.RelatedMaterialID,
 		Usage:             string(c.Usage),
 		Status:            string(c.Status),
+		CreatedBy:         c.CreatedByID,
 		CreatedAt:         c.CreatedAt,
 	}
 }

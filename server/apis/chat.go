@@ -99,7 +99,7 @@ func (a *App) handleSendMessage(w http.ResponseWriter, r *http.Request) {
 
 	sources := make([]system.MessageSource, len(chunks))
 	for i, c := range chunks {
-		sources[i] = system.MessageSource{MaterialID: c.MaterialID, Name: c.Name}
+		sources[i] = system.MessageSource{MaterialID: c.MaterialID, Title: c.Name, ChunkID: c.ChunkID, Score: c.Score}
 	}
 
 	assistantMsg, err := a.Store.AppendMessage(user.ID, conversationID, system.MessageRoleAssistant, result.Answer, sources)

@@ -79,6 +79,7 @@ func (a *App) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := system.HashPassword(req.Password)
 	if err != nil {
+		logs.FromContext(r.Context()).Log("error", "failed to hash password for new user "+req.Email+": "+err.Error())
 		writeError(w, http.StatusInternalServerError, "failed to create user")
 		return
 	}

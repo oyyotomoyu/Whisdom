@@ -19,8 +19,10 @@ type conversationSummaryResponse struct {
 }
 
 type messageSourceResponse struct {
-	MaterialID string `json:"materialId"`
-	Name       string `json:"name"`
+	MaterialID string  `json:"materialId"`
+	Title      string  `json:"title"`
+	ChunkID    string  `json:"chunkId,omitempty"`
+	Score      float64 `json:"score,omitempty"`
 }
 
 type conversationMessageResponse struct {
@@ -48,7 +50,7 @@ func toMessageSources(sources []system.MessageSource) []messageSourceResponse {
 	}
 	out := make([]messageSourceResponse, len(sources))
 	for i, s := range sources {
-		out[i] = messageSourceResponse{MaterialID: s.MaterialID, Name: s.Name}
+		out[i] = messageSourceResponse{MaterialID: s.MaterialID, Title: s.Title, ChunkID: s.ChunkID, Score: s.Score}
 	}
 	return out
 }

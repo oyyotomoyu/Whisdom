@@ -77,7 +77,13 @@ func (r *VectorRAG) Retrieve(ctx context.Context, query string) ([]ContextChunk,
 
 	out := make([]ContextChunk, len(candidates))
 	for i, c := range candidates {
-		out[i] = ContextChunk{MaterialID: c.chunk.MaterialID, Name: c.materialName, Text: c.chunk.Text}
+		out[i] = ContextChunk{
+			MaterialID: c.chunk.MaterialID,
+			ChunkID:    c.chunk.ID,
+			Name:       c.materialName,
+			Text:       c.chunk.Text,
+			Score:      c.score,
+		}
 	}
 	return out, nil
 }
