@@ -13,8 +13,14 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "noEmit": true,
     "jsx": "react-jsx",
+
+    /* ODM branding (see docs/client.md) lives at the repo root, outside client/ */
+    "paths": {
+      "@odm/*": ["../odm/*"]
+    },
 
     /* Linting */
     "noUnusedLocals": true,

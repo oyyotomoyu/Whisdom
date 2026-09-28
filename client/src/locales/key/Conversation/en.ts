@@ -9,7 +9,7 @@ export default {
     subtitle: "Start a new conversation to get answers grounded in your organization's documents.",
   },
   composer: {
-    placeholder: "Message Whisdom...",
+    placeholder: "Message {{productName}}...",
     send: "Send",
     hint: "Enter to send, Shift+Enter for a new line",
   },

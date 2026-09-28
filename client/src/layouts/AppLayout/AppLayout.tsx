@@ -5,6 +5,7 @@ import { useIsMobile } from "../../hooks/useMediaQuery";
 import { useUiStore } from "../../store/uiStore";
 import { ConversationSidebar } from "../../components/ConversationSidebar";
 import { LanguageSelector } from "../../components/LanguageSelector";
+import { productName } from "../../theme";
 import "./AppLayout.css";
 
 export function AppLayout() {
@@ -18,7 +19,7 @@ export function AppLayout() {
   const sidebarContent = (
     <>
       <div className="app-sidebar-header">
-        <span className="app-name">{t("appName")}</span>
+        <span className="app-name">{t("appName", { productName })}</span>
       </div>
       <div className="app-sidebar-conversations">
         <ConversationSidebar onNavigate={isMobile ? closeSidebar : undefined} />
@@ -58,7 +59,7 @@ export function AppLayout() {
             <span />
             <span />
           </button>
-          <span className="app-name">{t("appName")}</span>
+          <span className="app-name">{t("appName", { productName })}</span>
         </header>
       )}
 

@@ -1,5 +1,5 @@
 export default {
-  title: "Whisdom にサインイン",
+  title: "{{productName}} にサインイン",
   subtitle: "あなたの会社専用プライベート AI アシスタント。",
   usernameLabel: "ユーザー名またはメールアドレス",
   usernamePlaceholder: "you@company.com",

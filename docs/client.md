@@ -296,6 +296,96 @@ client/
 
 ---
 
+# Theme And Branding (ODM)
+
+Whisdom follows the same ODM (white-label build) pattern as the NexGestion
+project: everything a rebrand needs to change — the product name, colors, and
+branding images — lives outside `client/`, in a repository-level `odm/`
+directory, so a customer-specific build can replace it without touching
+component or stylesheet code.
+
+```text
+odm/
+├── theme.json                 # Named color palette
+├── branding.json              # Product name
+└── img/
+    ├── favicon.svg             # Browser tab icon
+    └── login-logo.svg          # Login card logo
+```
+
+`client/vite.config.ts` and `client/tsconfig.app.json` both map `@odm/*` to
+`../odm/*`, so any client file can import branding directly:
+`import theme from "@odm/theme.json"`, `import logoUrl from
+"@odm/img/login-logo.svg?url"`.
+
+## Colors
+
+`theme.json` has a `name` (a business-neutral palette identifier, e.g.
+`"whisdom-default"`) and a `colors` map of semantic tokens:
+
+```text
+bg, bgSubtle, bgSidebar, bgHover, border,
+text, textMuted,
+primary, primaryHover, primarySoft, primaryContrast,
+danger, dangerBg,
+success, successBg,
+warning, warningBg
+```
+
+`client/src/theme/index.ts` reads `@odm/theme.json` and, before the app
+renders, sets one `--color-<kebab-case-token>` CSS custom property per entry
+on the document root (`primaryHover` → `--color-primary-hover`) — the same
+approach NexGestion's `NexColor` provider uses, adapted to Whisdom's simpler
+single-palette client (no in-app theme switching yet).
+`client/src/theme/tokens.css` never hardcodes a `--color-*` value; it only
+defines non-brand tokens (`--radius-*`, `--space-*`, `--font-sans`,
+`--sidebar-width`, `--topbar-height`) and global element styles.
+
+Guidelines:
+
+* All colors must be defined in `odm/theme.json` and consumed as
+  `var(--color-*)`. Literal hex/rgb color values are forbidden in CSS.
+* Add a new semantic token to `theme.json` instead of reusing an existing
+  one for an unrelated purpose or reaching for a literal value in a view.
+* React/canvas code that needs a color value in JS rather than CSS should
+  call `getThemeColor()` from `client/src/theme`, not import the JSON
+  directly.
+
+## Product Name
+
+`branding.json` has one field, `productName` (e.g. `"Whisdom"`). It is the
+one place the product's name is spelled out anywhere in the client —
+`index.html` has no `<title>`, and no locale file hardcodes the name.
+
+`client/src/theme/index.ts` reads `@odm/branding.json` and, in the same pass
+that applies colors, sets `document.title` and exports `productName`. Views
+that need the name in visible text import it from `client/src/theme` and
+pass it as an i18next interpolation value: `t("appName", { productName })`.
+Locale strings that embed the name use a `{{productName}}` placeholder
+(e.g. Login's `title: "Sign in to {{productName}}"`) instead of the literal
+word, so every language stays correct under a rebrand.
+
+## Branding Images
+
+| File | Required format | Usage |
+| --- | --- | --- |
+| `favicon.svg` | SVG | Browser tab icon; injected via `<link>` from `client/src/main.tsx`, not declared in `index.html`, so an ODM build only replaces the file |
+| `login-logo.svg` | SVG | Logo shown above the login form (`client/src/views/Login`) |
+
+ODM customization must preserve these filenames so the client can replace
+assets without a code change.
+
+## Build-Time Scope
+
+Like NexGestion, this is a **build-time** customization point for v1: an ODM
+build replaces `odm/theme.json`, `odm/branding.json`, and `odm/img/*`, then
+rebuilds the client.
+Admin-editable branding served and applied at runtime (so a change is visible
+without a rebuild) is a possible later enhancement, not part of the initial
+scope.
+
+---
+
 # Views
 
 ## Login

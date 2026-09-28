@@ -1,5 +1,5 @@
 export default {
-  appName: "Whisdom",
+  appName: "{{productName}}",
   actions: {
     save: "Save",
     cancel: "Cancel",

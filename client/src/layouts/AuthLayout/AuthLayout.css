@@ -4,7 +4,7 @@
   display: grid;
   min-height: 100vh;
   overflow: hidden;
-  background: radial-gradient(circle at top right, #ecebff, var(--color-bg-subtle) 46%);
+  background: radial-gradient(circle at top right, var(--color-primary-soft), var(--color-bg-subtle) 46%);
 }
 
 .auth-layout-top {

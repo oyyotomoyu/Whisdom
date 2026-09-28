@@ -76,12 +76,12 @@
 }
 
 .status-pending {
-  background: #fef3c7;
+  background: var(--color-warning-bg);
   color: var(--color-warning);
 }
 
 .status-approved {
-  background: #dcfce7;
+  background: var(--color-success-bg);
   color: var(--color-success);
 }
 

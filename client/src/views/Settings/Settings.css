@@ -95,7 +95,7 @@
 
 .active-badge {
   margin-left: auto;
-  background: #dcfce7;
+  background: var(--color-success-bg);
   color: var(--color-success);
   padding: 2px 8px;
   border-radius: 999px;

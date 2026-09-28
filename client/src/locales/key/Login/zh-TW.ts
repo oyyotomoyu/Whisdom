@@ -1,5 +1,5 @@
 export default {
-  title: "登入 Whisdom",
+  title: "登入 {{productName}}",
   subtitle: "您的私有企業 AI 助理。",
   usernameLabel: "使用者名稱或電子郵件",
   usernamePlaceholder: "you@company.com",

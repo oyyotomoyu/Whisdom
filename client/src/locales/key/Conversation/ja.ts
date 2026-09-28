@@ -9,7 +9,7 @@ export default {
     subtitle: "新しい会話を開始すると、社内文書に基づいた回答が得られます。",
   },
   composer: {
-    placeholder: "Whisdom にメッセージを送信...",
+    placeholder: "{{productName}} にメッセージを送信...",
     send: "送信",
     hint: "Enter で送信、Shift+Enter で改行",
   },

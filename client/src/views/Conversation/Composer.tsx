@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from "react";
 import { useTranslation } from "../../../node_modules/react-i18next";
+import { productName } from "../../theme";
 import "./Composer.css";
 
 interface ComposerProps {
@@ -30,7 +31,7 @@ export function Composer({ onSend, isSending, error }: ComposerProps) {
       <div className="composer-inner">
         <textarea
           className="composer-input"
-          placeholder={t("composer.placeholder")}
+          placeholder={t("composer.placeholder", { productName })}
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={handleKeyDown}

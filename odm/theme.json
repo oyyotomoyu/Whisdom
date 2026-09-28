@@ -1,0 +1,22 @@
+{
+  "name": "whisdom-default",
+  "colors": {
+    "bg": "#ffffff",
+    "bgSubtle": "#f7f7f8",
+    "bgSidebar": "#f2f2f5",
+    "bgHover": "#ececef",
+    "border": "#e2e2e6",
+    "text": "#1a1a1e",
+    "textMuted": "#6b6b74",
+    "primary": "#4f46e5",
+    "primaryHover": "#4338ca",
+    "primarySoft": "#ecebff",
+    "primaryContrast": "#ffffff",
+    "danger": "#dc2626",
+    "dangerBg": "#fef2f2",
+    "success": "#16a34a",
+    "successBg": "#dcfce7",
+    "warning": "#d97706",
+    "warningBg": "#fef3c7"
+  }
+}

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "../../../node_modules/react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
+import loginLogoUrl from "@odm/img/login-logo.svg?url";
 import { useAuth } from "../../hooks/useAuth";
 import { getDevCredentials, isDevMode } from "../../requests/auth/devMode";
+import { productName } from "../../theme";
 import "./Login.css";
 
 export function Login() {
@@ -42,11 +44,11 @@ export function Login() {
   return (
     <section className="login-card" aria-labelledby="login-title">
       <div className="login-logo" aria-hidden="true">
-        W
+        <img src={loginLogoUrl} alt="" className="login-logo-img" />
       </div>
       <div className="login-heading">
         <h1 className="login-title" id="login-title">
-          {t("title")}
+          {t("title", { productName })}
         </h1>
         <p className="login-subtitle">{t("subtitle")}</p>
       </div>

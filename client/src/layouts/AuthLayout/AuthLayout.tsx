@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { useTranslation } from "../../../node_modules/react-i18next";
 import { LanguageSelector } from "../../components/LanguageSelector";
+import { productName } from "../../theme";
 import "./AuthLayout.css";
 
 export function AuthLayout() {
@@ -9,7 +10,7 @@ export function AuthLayout() {
   return (
     <div className="auth-layout">
       <div className="auth-layout-top">
-        <span className="app-name">{t("appName")}</span>
+        <span className="app-name">{t("appName", { productName })}</span>
         <LanguageSelector className="app-language-selector" />
       </div>
       <div className="auth-layout-content">

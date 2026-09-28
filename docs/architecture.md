@@ -167,6 +167,7 @@ Whisdom/
 │   ├── Makefile
 │   ├── go.mod
 │   └── main.go
+├── odm/            # ODM branding: theme.json and customizable images (see docs/client.md)
 └── docs/
 ```
 

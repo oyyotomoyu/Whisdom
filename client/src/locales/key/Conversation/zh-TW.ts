@@ -9,7 +9,7 @@ export default {
     subtitle: "開始新的對話，取得根據公司文件產生的回答。",
   },
   composer: {
-    placeholder: "傳送訊息給 Whisdom...",
+    placeholder: "傳送訊息給 {{productName}}...",
     send: "傳送",
     hint: "Enter 傳送，Shift+Enter 換行",
   },
